@@ -5,7 +5,7 @@ package src.pas.battleship.agents;
 // SYSTEM IMPORTS
 import java.util.Arrays;
 import java.io.*;
-import java.util.Stack;
+import java.util.*;
 
 // JAVA PROJECT IMPORTS
 import edu.bu.battleship.agents.Agent;
@@ -46,15 +46,15 @@ public class ProbabilisticAgent
         Coordinate bestCell = new Coordinate(0,0);
         EnemyBoard.Outcome[][] enemyBoard = game.getEnemyBoardView();
         float[][] probabilities = new float[gameConstants.getNumRows()][gameConstants.getNumCols()];
+        Outcome outcome = enemyBoard[this.lastAttack.getXCoordinate()][this.lastAttack.getYCoordinate()];
 
         /* if most recent attack was a HIT and current not in Target mode*/
-        if (this.mode != Mode.TARGET && 
-            enemyBoard[this.lastAttack.getXCoordinate()][this.lastAttack.getYCoordinate()] == Outcome.HIT) {
+        if (this.mode != Mode.TARGET && outcome == Outcome.HIT) {
             setMode(Mode.TARGET);
-        }
+        } 
     
         /* execute appropriate method based on current Mode */
-        bestCell = (this.mode == Mode.HUNT) ? Hunt(game, probabilities, enemyBoard) : Target(game, enemyBoard);
+        bestCell = (this.mode == Mode.HUNT) ? Hunt(game, probabilities, enemyBoard) : Target(game, outcome, enemyBoard);
 
         setLastAttack(bestCell);
         return bestCell;
@@ -103,7 +103,7 @@ public class ProbabilisticAgent
     }
 
     /* Target mode: agent has HIT a ship */
-    public Coordinate Target(GameView game, Coordinate lastHit, EnemyBoard.Outcome[][] enemyBoard){
+    public Coordinate Target(GameView game, Outcome outcome, EnemyBoard.Outcome[][] enemyBoard){
         if (outcome == Outcome.HIT || outcome == Outcome.SUNK) {
             huntingTargets.add(this.lastAttack);
         }
