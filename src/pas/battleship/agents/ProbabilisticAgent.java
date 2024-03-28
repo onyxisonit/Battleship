@@ -54,8 +54,7 @@ public class ProbabilisticAgent
         }
     
         /* execute appropriate method based on current Mode */
-        bestCell = (this.mode == Mode.HUNT) ? Hunt(game, probabilities, enemyBoard) 
-                                            : Target(game, this.lastAttack, enemyBoard);
+        bestCell = (this.mode == Mode.HUNT) ? Hunt(game, probabilities, enemyBoard) : Target(game, enemyBoard);
 
         setLastAttack(bestCell);
         return bestCell;
@@ -105,33 +104,29 @@ public class ProbabilisticAgent
 
     /* Target mode: agent has HIT a ship */
     public Coordinate Target(GameView game, Coordinate lastHit, EnemyBoard.Outcome[][] enemyBoard){
-        System.out.println("you've reached target mode ;)");
-        int xCoord = lastHit.getXCoordinate();
-        int yCoord = lastHit.getYCoordinate();
-        if (enemyBoard[xCoord][yCoord] == Outcome.HIT) {
-            huntingTargets.push(lastHit);
+        if (outcome == Outcome.HIT || outcome == Outcome.SUNK) {
+            huntingTargets.add(this.lastAttack);
         }
 
-        int[] cardDir = {-1, 0, 1};
-        huntingTargets.pop();
+        int[][] cardDir = {{0,1},{0,-1},{-1,0},{1,0}};
         while (!huntingTargets.isEmpty()) {
-            for (int xOffset : cardDir) {
-                for (int yOffset : cardDir) {
-                    if (xOffset == yOffset) {
-                        continue;
-                    }
-                    int nextX = xCoord + xOffset;
-                    int nextY = yCoord + yOffset;
-                    if (enemyBoard[nextX][nextY] == Outcome.UNKNOWN && game.isInBounds(nextX, nextY)) {
-                        return new Coordinate(nextX, nextY);
-                    }
+            Coordinate currTar = huntingTargets.peek();
+            /* find cardinal positions of the last*/
+            int xCoord = currTar.getXCoordinate();
+            int yCoord = currTar.getYCoordinate();
+
+            for (int[] Coordinate : cardDir) {
+                int nextX = xCoord + Coordinate[0];
+                int nextY = yCoord + Coordinate[1];
+                if (enemyBoard[nextX][nextY] == Outcome.UNKNOWN && game.isInBounds(nextX, nextY)) {
+                    return new Coordinate(nextX, nextY);
                 }
+
             }
-            huntingTargets.pop();
-        
+            huntingTargets.remove();
         } 
         setMode(Mode.HUNT);
-        return Hunt(game, ,enemyBoard);
+        return null;
     }
 
 
