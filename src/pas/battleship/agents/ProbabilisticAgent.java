@@ -31,7 +31,7 @@ public class ProbabilisticAgent
         super(name);
         System.out.println("[INFO] ProbabilisticAgent.ProbabilisticAgent: constructed agent");
     }
-    float[][] explored;
+    //float[][] explored;
     float[][] probabilities;
     int boardStateHash;
 
@@ -102,7 +102,7 @@ public class ProbabilisticAgent
                         }
                     }
                 }
-                explored[row][col] = 1;
+                //explored[row][col] = 1;
                 //NEED TO DO: somehow check based on changing game configurations and determine whether or not probabilities need to be recalculated???
 
                 if (probabilities[row][col] > highestProb) {
@@ -135,8 +135,10 @@ public class ProbabilisticAgent
             for (int[] Coordinate : cardDir) {
                 int nextX = xCoord + Coordinate[0];
                 int nextY = yCoord + Coordinate[1];
-                if (game.isInBounds(nextX, nextY) && enemyBoard[nextX][nextY] == Outcome.UNKNOWN && explored[nextX][nextY] == 0) {
-                    explored[nextX][nextY] = 1;
+                if (game.isInBounds(nextX, nextY) && enemyBoard[nextX][nextY] == Outcome.UNKNOWN) {
+                    //if (game.isInBounds(nextX, nextY) && enemyBoard[nextX][nextY] == Outcome.UNKNOWN && explored[nextX][nextY] == 0) {
+                
+                    //explored[nextX][nextY] = 1;
                     Coordinate target = new Coordinate(nextX, nextY);
                     return target;
                 }
