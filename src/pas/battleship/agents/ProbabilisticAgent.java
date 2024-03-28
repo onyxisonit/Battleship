@@ -2,9 +2,8 @@
 package src.pas.battleship.agents;
 
 
-// SYSTEM IMPORTS
-import java.util.Arrays;
 import java.io.*;
+// SYSTEM IMPORTS
 import java.util.*;
 
 // JAVA PROJECT IMPORTS
@@ -32,8 +31,11 @@ public class ProbabilisticAgent
         super(name);
         System.out.println("[INFO] ProbabilisticAgent.ProbabilisticAgent: constructed agent");
     }
+    float[][] explored;
+    float[][] probabilities;
+    int boardStateHash;
 
-    
+
     public void setLastAttack(Coordinate newCoordinate){ this.lastAttack = newCoordinate; }
     public Coordinate getLastAttack(){ return this.lastAttack; }
     public void setMode(Mode newMode){ this.mode = newMode; }
@@ -57,14 +59,19 @@ public class ProbabilisticAgent
         bestCell = (this.mode == Mode.HUNT) ? Hunt(game, probabilities, enemyBoard) : Target(game, outcome, enemyBoard);
 
         setLastAttack(bestCell);
+        
         return bestCell;
     }
 
     /* Hunt mode: agent looking for a HIT */
     public Coordinate Hunt(final GameView game, float[][] probabilities, EnemyBoard.Outcome[][] enemyBoard){
+        Map<ShipType, Integer> shipTypeToNumRemaining = game.getEnemyShipTypeToNumRemaining();
         float highestProb = 0f;
         Coordinate bestCell = new Coordinate(0,0);
         System.out.println("we out here hunting");
+
+        //NEED TO DO
+        //make Hunt more efficient...possible set up cache to prevent probabilities being recalculated
 
         /* assign prob for each cell */
         for (int row = 0; row < probabilities.length; row++) {
@@ -73,11 +80,14 @@ public class ProbabilisticAgent
                 if (enemyBoard[row][col] != Outcome.UNKNOWN) {
                     continue;
                 }
-                for (ShipType c : ShipType.values()) {
+                for (ShipType shipType : ShipType.values()) {
                     /*check if this type has not been sunk yet */
-                    // TO DO //
+                    
+                    if (shipTypeToNumRemaining.get(shipType) == 0) {
+                    continue; // Skip calculations for sunk ship types??
+                    }
 
-                    int shipSize = Constants.Ship.getShipSize(c);
+                    int shipSize = Constants.Ship.getShipSize(shipType);
                     /*check if horizontal/vertical orientation fits */
                     for (int orientation = 0; orientation < 2; orientation++) {
                         for (int offset = 0; offset < shipSize; offset++) {
@@ -92,13 +102,20 @@ public class ProbabilisticAgent
                         }
                     }
                 }
+                explored[row][col] = 1;
+                //NEED TO DO: somehow check based on changing game configurations and determine whether or not probabilities need to be recalculated???
 
                 if (probabilities[row][col] > highestProb) {
                     highestProb = probabilities[row][col];
                     bestCell = new Coordinate(row,col);
                 }
+
+                 //NEED TO DO: reset probabilities?
+                //probabilities[row][col] = 0;
             }
+            
         }
+       
         return bestCell;
     }
 
@@ -118,15 +135,18 @@ public class ProbabilisticAgent
             for (int[] Coordinate : cardDir) {
                 int nextX = xCoord + Coordinate[0];
                 int nextY = yCoord + Coordinate[1];
-                if (enemyBoard[nextX][nextY] == Outcome.UNKNOWN && game.isInBounds(nextX, nextY)) {
-                    return new Coordinate(nextX, nextY);
+                if (game.isInBounds(nextX, nextY) && enemyBoard[nextX][nextY] == Outcome.UNKNOWN && explored[nextX][nextY] == 0) {
+                    explored[nextX][nextY] = 1;
+                    Coordinate target = new Coordinate(nextX, nextY);
+                    return target;
                 }
 
             }
-            huntingTargets.remove();
+            huntingTargets.pop();
         } 
         setMode(Mode.HUNT);
-        return null;
+        float[][] probabilities = new float[game.getGameConstants().getNumRows()][game.getGameConstants().getNumCols()];
+        return Hunt(game, probabilities, enemyBoard);
     }
 
 
